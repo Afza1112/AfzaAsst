@@ -492,7 +492,6 @@ class LocalAIAssistant:
                 with st.spinner("Loading AI model (first time only)..."):
                     self.chat_model = pipeline(
                         "text-generation",
-<<<<<<< HEAD
                         model="microsoft/DialoGPT-medium",
                         device=-1,
                         pad_token_id=50256
@@ -517,31 +516,6 @@ class LocalAIAssistant:
             
         except Exception as e:
             return f"AI temporarily unavailable: {str(e)}"
-=======
-                        model="gpt2",  # Smaller, faster model
-                        device=-1,  # CPU only
-                        max_length=150
-                    )
-            
-            # Generate response
-            prompt = f"Human: {message}\nAI:"
-            response = self.chat_model(
-                prompt, 
-                max_length=len(prompt.split()) + 50,
-                num_return_sequences=1,
-                temperature=0.7,
-                pad_token_id=50256,
-                do_sample=True
-            )
-            
-            # Extract only the AI response part
-            full_response = response[0]['generated_text']
-            ai_response = full_response.split("AI:")[-1].strip()
-            return ai_response if ai_response else "I'm here to help! Please ask me anything."
-            
-        except Exception as e:
-            return f"AI temporarily unavailable: {str(e)}. Please try again."
->>>>>>> 5e5c83870af2d2276b05cd7ebef814f904013eab
     
     def auto_save_all(self):
         try:
@@ -581,11 +555,7 @@ def check_ollama_connection_cached():
     if is_cloud:
         transformers = lazy_import('transformers')
         if transformers:
-<<<<<<< HEAD
             return True, "🌐 Cloud AI Model (DialoGPT-Medium)", ["DialoGPT-medium"]
-=======
-            return True, "🌐 Cloud AI Model (Hugging Face)", ["DialoGPT-small"]
->>>>>>> 5e5c83870af2d2276b05cd7ebef814f904013eab
         else:
             return False, "❌ Add 'transformers' to requirements.txt", []
     
@@ -618,18 +588,17 @@ def load_stable_diffusion_model():
         if not torch or not StableDiffusionPipeline:
             return None
         
-        # For Streamlit Cloud, use a smaller model or handle memory constraints
+        # Use smaller model for Streamlit Cloud
         pipeline = StableDiffusionPipeline.from_pretrained(
             "runwayml/stable-diffusion-v1-5",
-            torch_dtype=torch.float32,
+            torch_dtype=torch.float16,
             safety_checker=None,
             requires_safety_checker=False,
-            use_safetensors=True,
             low_cpu_mem_usage=True
         )
         pipeline = pipeline.to("cpu")
         pipeline.enable_attention_slicing()
-        pipeline.enable_sequential_cpu_offload()
+        pipeline.enable_model_cpu_offload()
         return pipeline
     except Exception as e:
         # Don't show error in UI here, let the calling function handle it
@@ -908,22 +877,7 @@ def render_image_mode():
     
     if not diffusers_available or not torch_available:
         st.error("🚫 Image generation requires additional libraries")
-        st.markdown("""
-        **Missing Dependencies:**
-        ```bash
-        pip install diffusers torch transformers accelerate
-        ```
-        
-        **For Streamlit Cloud deployment, add to requirements.txt:**
-        ```
-        diffusers>=0.21.0
-        torch>=2.0.0
-        transformers>=4.30.0
-        accelerate>=0.20.0
-        ```
-        """)
-        
-        st.info("💡 After installing dependencies, restart the application to enable image generation.")
+        st.info("💡 Dependencies are being installed. Please wait and refresh the page.")
         return
     
     # Handle selected prompt
