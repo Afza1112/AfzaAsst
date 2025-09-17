@@ -492,6 +492,7 @@ class LocalAIAssistant:
                 with st.spinner("Loading AI model (first time only)..."):
                     self.chat_model = pipeline(
                         "text-generation",
+<<<<<<< HEAD
                         model="microsoft/DialoGPT-medium",
                         device=-1,
                         pad_token_id=50256
@@ -516,6 +517,31 @@ class LocalAIAssistant:
             
         except Exception as e:
             return f"AI temporarily unavailable: {str(e)}"
+=======
+                        model="gpt2",  # Smaller, faster model
+                        device=-1,  # CPU only
+                        max_length=150
+                    )
+            
+            # Generate response
+            prompt = f"Human: {message}\nAI:"
+            response = self.chat_model(
+                prompt, 
+                max_length=len(prompt.split()) + 50,
+                num_return_sequences=1,
+                temperature=0.7,
+                pad_token_id=50256,
+                do_sample=True
+            )
+            
+            # Extract only the AI response part
+            full_response = response[0]['generated_text']
+            ai_response = full_response.split("AI:")[-1].strip()
+            return ai_response if ai_response else "I'm here to help! Please ask me anything."
+            
+        except Exception as e:
+            return f"AI temporarily unavailable: {str(e)}. Please try again."
+>>>>>>> 5e5c83870af2d2276b05cd7ebef814f904013eab
     
     def auto_save_all(self):
         try:
@@ -555,7 +581,11 @@ def check_ollama_connection_cached():
     if is_cloud:
         transformers = lazy_import('transformers')
         if transformers:
+<<<<<<< HEAD
             return True, "🌐 Cloud AI Model (DialoGPT-Medium)", ["DialoGPT-medium"]
+=======
+            return True, "🌐 Cloud AI Model (Hugging Face)", ["DialoGPT-small"]
+>>>>>>> 5e5c83870af2d2276b05cd7ebef814f904013eab
         else:
             return False, "❌ Add 'transformers' to requirements.txt", []
     
