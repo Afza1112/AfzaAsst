@@ -618,18 +618,17 @@ def load_stable_diffusion_model():
         if not torch or not StableDiffusionPipeline:
             return None
         
-        # For Streamlit Cloud, use a smaller model or handle memory constraints
+        # Use smaller model for Streamlit Cloud
         pipeline = StableDiffusionPipeline.from_pretrained(
             "runwayml/stable-diffusion-v1-5",
-            torch_dtype=torch.float32,
+            torch_dtype=torch.float16,
             safety_checker=None,
             requires_safety_checker=False,
-            use_safetensors=True,
             low_cpu_mem_usage=True
         )
         pipeline = pipeline.to("cpu")
         pipeline.enable_attention_slicing()
-        pipeline.enable_sequential_cpu_offload()
+        pipeline.enable_model_cpu_offload()
         return pipeline
     except Exception as e:
         # Don't show error in UI here, let the calling function handle it
@@ -908,22 +907,7 @@ def render_image_mode():
     
     if not diffusers_available or not torch_available:
         st.error("🚫 Image generation requires additional libraries")
-        st.markdown("""
-        **Missing Dependencies:**
-        ```bash
-        pip install diffusers torch transformers accelerate
-        ```
-        
-        **For Streamlit Cloud deployment, add to requirements.txt:**
-        ```
-        diffusers>=0.21.0
-        torch>=2.0.0
-        transformers>=4.30.0
-        accelerate>=0.20.0
-        ```
-        """)
-        
-        st.info("💡 After installing dependencies, restart the application to enable image generation.")
+        st.info("💡 Dependencies are being installed. Please wait and refresh the page.")
         return
     
     # Handle selected prompt
