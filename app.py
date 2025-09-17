@@ -492,29 +492,30 @@ class LocalAIAssistant:
                 with st.spinner("Loading AI model (first time only)..."):
                     self.chat_model = pipeline(
                         "text-generation",
-                        model="gpt2",  # Smaller, faster model
-                        device=-1,  # CPU only
-                        max_length=150
+                        model="microsoft/DialoGPT-medium",
+                        device=-1,
+                        pad_token_id=50256
                     )
             
             # Generate response
-            prompt = f"Human: {message}\nAI:"
             response = self.chat_model(
-                prompt, 
-                max_length=len(prompt.split()) + 50,
+                message,
+                max_length=200,
                 num_return_sequences=1,
-                temperature=0.7,
-                pad_token_id=50256,
-                do_sample=True
+                temperature=0.8,
+                do_sample=True,
+                pad_token_id=50256
             )
             
-            # Extract only the AI response part
-            full_response = response[0]['generated_text']
-            ai_response = full_response.split("AI:")[-1].strip()
-            return ai_response if ai_response else "I'm here to help! Please ask me anything."
+            generated_text = response[0]['generated_text']
+            if len(generated_text) > len(message):
+                ai_response = generated_text[len(message):].strip()
+                return ai_response if ai_response else "I'm here to help!"
+            else:
+                return "I'm here to help!"
             
         except Exception as e:
-            return f"AI temporarily unavailable: {str(e)}. Please try again."
+            return f"AI temporarily unavailable: {str(e)}"
     
     def auto_save_all(self):
         try:
@@ -554,7 +555,7 @@ def check_ollama_connection_cached():
     if is_cloud:
         transformers = lazy_import('transformers')
         if transformers:
-            return True, "🌐 Cloud AI Model (Hugging Face)", ["DialoGPT-small"]
+            return True, "🌐 Cloud AI Model (DialoGPT-Medium)", ["DialoGPT-medium"]
         else:
             return False, "❌ Add 'transformers' to requirements.txt", []
     
