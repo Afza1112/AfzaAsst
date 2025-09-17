@@ -162,10 +162,10 @@ class CloudAIAssistant:
                 
             with st.spinner("🤖 Loading AI model (first time only)..."):
                 self.chat_model = pipeline(
-                    "text-generation",
-                    model="microsoft/DialoGPT-medium",
+                    "text2text-generation",
+                    model="google/flan-t5-large",  # 780MB - best quality for space
                     device=-1,
-                    pad_token_id=50256
+                    max_length=512
                 )
             st.session_state.ai_model_loaded = True
             return True
@@ -182,17 +182,11 @@ class CloudAIAssistant:
                 message,
                 max_length=200,
                 num_return_sequences=1,
-                temperature=0.8,
-                do_sample=True,
-                pad_token_id=50256
+                temperature=0.7,
+                do_sample=True
             )
             
-            generated_text = response[0]['generated_text']
-            if len(generated_text) > len(message):
-                ai_response = generated_text[len(message):].strip()
-                return ai_response if ai_response else "I'm here to help!"
-            else:
-                return "I'm here to help!"
+            return response[0]['generated_text'].strip()
                 
         except Exception as e:
             return f"AI temporarily unavailable: {str(e)}"
